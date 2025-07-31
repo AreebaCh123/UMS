@@ -1,9 +1,7 @@
 from rest_framework import viewsets
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from .models import CustomUser, Department, Student, Teacher,Course, Enrollment, Result,Attendance, Withdrawal, Timetable
-from .serializers import CustomUserSerializer, DepartmentSerializer, StudentSerializer, TeacherSerializer, CourseSerializer, EnrollmentSerializer, ResultSerializer, AttendanceSerializer, WithdrawalSerializer, TimetableSerializer
-from rest_framework.permissions import DjangoModelPermissions
+from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
+from .models import *
+from .serializers import *
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
@@ -21,12 +19,8 @@ class CourseViewSet(viewsets.ModelViewSet):
             return Course.objects.filter(teacher__user=user)
         elif user.user_type == 'student':
             return Course.objects.filter(enrollment__student__user=user).distinct()
-        elif user.user_type == 'admin' or user.is_superuser:
-            return Course.objects.all()
-        return Course.objects.none()
+        return Course.objects.all()
 
-
-    
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
@@ -37,9 +31,9 @@ class StudentViewSet(viewsets.ModelViewSet):
         if user.user_type == 'student':
             return Student.objects.filter(user=user)
         elif user.user_type == 'faculty':
-            return Student.objects.filter(enrollment__course__faculty__user=user).distinct()
+            return Student.objects.filter(enrollment__course__teacher__user=user).distinct()
         return Student.objects.all()
-    
+
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
@@ -48,11 +42,11 @@ class TeacherViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'faculty':
-            return Teacher.objects.filter(department=user.faculty.department)
+            return Teacher.objects.filter(department=user.teacher.department)
         elif user.user_type == 'student':
             return Teacher.objects.filter(department=user.student.department)
         return Teacher.objects.all()
-    
+
 class EnrollmentViewSet(viewsets.ModelViewSet):
     queryset = Enrollment.objects.all()
     serializer_class = EnrollmentSerializer
@@ -61,11 +55,10 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'faculty':
-            return Enrollment.objects.filter(course__faculty__user=user)
+            return Enrollment.objects.filter(course__teacher__user=user)
         elif user.user_type == 'student':
             return Enrollment.objects.filter(student__user=user)
         return Enrollment.objects.all()
-    
 
 class WithdrawalViewSet(viewsets.ModelViewSet):
     queryset = Withdrawal.objects.all()
@@ -75,11 +68,11 @@ class WithdrawalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'faculty':
-            return Withdrawal.objects.filter(course__faculty__user=user)
+            return Withdrawal.objects.filter(course__teacher__user=user)
         elif user.user_type == 'student':
             return Withdrawal.objects.filter(student__user=user)
         return Withdrawal.objects.all()
-    
+
 class ResultViewSet(viewsets.ModelViewSet):
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
@@ -88,11 +81,11 @@ class ResultViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'faculty':
-            return Result.objects.filter(course__faculty__user=user)
+            return Result.objects.filter(course__teacher__user=user)
         elif user.user_type == 'student':
             return Result.objects.filter(student__user=user)
         return Result.objects.all()
-    
+
 class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
@@ -101,7 +94,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'faculty':
-            return Attendance.objects.filter(course__faculty__user=user)
+            return Attendance.objects.filter(course__teacher__user=user)
         elif user.user_type == 'student':
             return Attendance.objects.filter(student__user=user)
         return Attendance.objects.all()
@@ -114,8 +107,7 @@ class TimetableViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.user_type == 'faculty':
-            return Timetable.objects.filter(course__faculty__user=user)
+            return Timetable.objects.filter(course__teacher__user=user)
         elif user.user_type == 'student':
             return Timetable.objects.filter(course__enrollment__student__user=user).distinct()
         return Timetable.objects.all()
-

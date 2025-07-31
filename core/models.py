@@ -9,9 +9,7 @@ class CustomUser(AbstractUser):
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
 
-    def __str__(self):
-        return f"{self.username} ({self.user_type})"
-
+   
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
@@ -40,8 +38,8 @@ class Course(models.Model):
     code = models.CharField(max_length=10)
     teacher = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True, blank=True)
 
-    def __str__(self):
-        return f"{self.code} - {self.name}"
+
+
 
 
 class Enrollment(models.Model):
